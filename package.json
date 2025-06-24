@@ -1,0 +1,48 @@
+{
+  "name": "budget-tracker-web",
+  "version": "2.0.0",
+  "description": "Professional-grade personal finance management with AI-powered merchant consolidation and Google Sheets integration",
+  "type": "module",
+  "main": "js/main.js",
+  "homepage": "https://github.com/yourusername/budget-tracker-web",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/budget-tracker-web.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/budget-tracker-web/issues"
+  },
+  "scripts": {
+    "dev": "python3 -m http.server 8000",
+    "start": "python3 -m http.server 8000",
+    "serve": "python3 -m http.server 8000",
+    "lint": "echo 'No linting configured - vanilla JS project'",
+    "test": "echo 'No tests configured - manual testing required'"
+  },
+  "keywords": [
+    "budget",
+    "finance",
+    "google-sheets",
+    "personal-finance",
+    "tracker",
+    "ai",
+    "gpt-4",
+    "merchant-cleaning",
+    "apps-script",
+    "vanilla-js"
+  ],
+  "author": "Budget Tracker Pro",
+  "license": "MIT",
+  "engines": {
+    "python": ">=3.6"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "files": [
+    "index.html",
+    "js/",
+    "config/",
+    "styles/",
+    "README.md"
+  ]
+}

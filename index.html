@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BudgetTracker Pro - Personal Finance Management</title>
+    
+    <!-- Global API Initialization - Must be defined before Google API scripts -->
+    <script>
+        // Global variables for API initialization
+        window.gapiLoaded = false;
+        window.gisLoaded = false;
+        
+        function gapiInit() {
+            console.log('GAPI loaded');
+            window.gapiLoaded = true;
+            checkAPIsReady();
+        }
+
+        function gisInit() {
+            console.log('GIS loaded');
+            window.gisLoaded = true;
+            checkAPIsReady();
+        }
+
+        function checkAPIsReady() {
+            if (window.gapiLoaded && window.gisLoaded && window.budgetApp) {
+                window.budgetApp.onAPIsReady();
+            }
+        }
+
+        function showConnectionHelp() {
+            const helpText = `🔗 APPS SCRIPT SETUP (Recommended):
+
+1. Open Google Apps Script (script.google.com)
+2. Create your project with Google authentication & sheet picker
+3. Deploy as Web App:
+   • Execute as: "Me"
+   • Who has access: "Anyone"
+4. Paste the Web App URL here
+5. Click "Connect & Browse Sheets"
+6. Authenticate in popup and select your sheet
+
+📋 Your Apps Script should:
+• Handle Google OAuth authentication
+• Show a sheet picker interface
+• Send selected sheet info back via postMessage
+• Example: window.opener.postMessage({type: 'SHEET_SELECTED', sheetId: 'abc123', sheetName: 'My Budget'}, '*')
+
+📊 ALTERNATIVE: Direct Sheets
+• For advanced users with API credentials
+• Requires manual Sheet ID entry`;
+            
+            alert(helpText);
+        }
+    </script>
+    
+    <!-- External Dependencies -->
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <script src="https://apis.google.com/js/api.js" onload="gapiInit()"></script>
+    <script src="https://apis.google.com/js/picker.js"></script>
+    <script src="https://accounts.google.com/gsi/client" onload="gisInit()"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <div class="app">
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="loading-overlay">
+            <div class="loading-content">
+                <div class="loading-header">
+                    <h2>💰 Loading Budget Data</h2>
+                </div>
+                
+                <div class="loading-spinner"></div>
+                
+                <div id="loading-text">Connecting to Google Sheets...</div>
+                
+                <!-- Progress Bar -->
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                    <div id="progress-text" class="progress-text">0%</div>
+                </div>
+                
+                <!-- Statistics -->
+                <div id="loading-stats" class="loading-stats">
+                    <div class="stat-item">
+                        <span class="stat-value" id="transaction-count">-</span>
+                        <span class="stat-label">Transactions</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="merchant-count">-</span>
+                        <span class="stat-label">Merchants</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="cleaned-count">-</span>
+                        <span class="stat-label">Auto-Cleaned</span>
+                    </div>
+                </div>
+                
+                <!-- Current Step -->
+                <div id="current-step" class="current-step">
+                    Step 1 of 5: Connecting...
+                </div>
+                
+                <!-- Enter App Button (hidden initially) -->
+                <div id="enter-app-section" class="enter-app-section" style="display: none;">
+                    <div class="loading-complete">
+                        <h3>✅ Loading Complete!</h3>
+                        <p>Your budget data has been loaded and processed successfully.</p>
+                    </div>
+                    <button id="enter-app-btn" onclick="window.budgetApp?.enterApp()" class="btn btn-primary btn-large">
+                        🚀 Enter Budget Tracker
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Container -->
+        <div id="toast-container" class="toast-container"></div>
+
+        <div class="container">
+            <!-- Welcome/Login Page -->
+            <div id="welcome-page" class="welcome-page">
+                <div class="welcome-container">
+                    <div class="welcome-header">
+                        <h1>💰 BudgetTracker Pro</h1>
+                        <p>Professional-grade personal finance management</p>
+                    </div>
+                    
+                    <div class="welcome-card">
+                        <h2>🔗 Connect to Your Data</h2>
+                        <p>Get started by connecting to your Google Apps Script to access your budget data.</p>
+                        
+                        <!-- Apps Script Connection -->
+                        <div class="connection-form">
+                            <input type="text" id="apps-script-url" placeholder="Paste your Google Apps Script Web App URL" class="input-standard">
+                            <button onclick="window.budgetApp?.openAppsScriptAuth()" class="btn btn-primary">🔗 Connect & Browse Sheets</button>
+                        </div>
+                        
+                        <div class="connection-help">
+                            <button onclick="showConnectionHelp()" class="btn btn-secondary">❓ Setup Help</button>
+                        </div>
+                    </div>
+                    
+                    <!-- OpenAI Configuration -->
+                    <div class="welcome-card">
+                        <h2>🤖 AI-Powered Merchant Cleaning</h2>
+                        <p>Enable automatic merchant name cleaning with GPT-4 (optional but recommended).</p>
+                        
+                        <div class="connection-form">
+                            <input type="password" id="openai-api-key" placeholder="OpenAI API Key (optional)" class="input-standard">
+                            <button onclick="window.budgetApp?.setOpenAIKey()" class="btn btn-secondary">💾 Save API Key</button>
+                        </div>
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <small style="color: var(--text-secondary);">
+                                Without API key: Basic regex cleaning only<br>
+                                With API key: Advanced GPT-4 merchant consolidation
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main App (Hidden by default) -->
+            <div id="main-app" style="display: none;">
+                <!-- Header -->
+                <header class="header">
+                    <div class="header-content" style="display: flex; align-items: center; justify-content: space-between;">
+                        <h1>💰 BudgetTracker Pro</h1>
+                        
+                        <!-- Connected Status -->
+                        <div id="connected-status" class="connected-status">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                <span style="color: var(--success-color);">✅ Connected to Google Sheets</span>
+                                <button onclick="window.budgetApp?.showSheetChanger()" class="btn btn-secondary" style="margin-left: auto; font-size: 0.75rem; padding: 0.25rem 0.5rem;">Change Sheet</button>
+                            </div>
+                            <button onclick="window.budgetApp?.disconnect()" class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">Disconnect</button>
+                        </div>
+                    </div>
+
+                    <!-- Navigation -->
+                    <nav class="nav">
+                        <button class="nav-btn active" data-view="dashboard">📊 Dashboard</button>
+                        <button class="nav-btn" data-view="budgets">💼 Budgets</button>
+                        <button class="nav-btn" data-view="categories">📁 Categories</button>
+                        <button class="nav-btn" data-view="merchants">🏪 Merchants</button>
+                        <button class="nav-btn" data-view="transactions">💰 Transactions</button>
+                    </nav>
+                </header>
+
+            <!-- Dashboard View -->
+            <div id="dashboard-view" class="app-view active">
+                <!-- Summary Cards -->
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <div class="card-value summary-value">$0.00</div>
+                        <div class="card-label summary-label">Total Spending</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="card-value summary-value">0</div>
+                        <div class="card-label summary-label">Transactions</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="card-value summary-value">$0.00</div>
+                        <div class="card-label summary-label">Avg Transaction</div>
+                    </div>
+                </div>
+
+                <div class="dashboard">
+                    <div class="main-content">
+                        <!-- Period Controls -->
+                        <div class="period-section">
+                            <div class="period-controls">
+                                <span class="period-label">Period:</span>
+                                <div class="period-filters">
+                                    <button class="period-btn" data-period="week">Week</button>
+                                    <button class="period-btn" data-period="payweek">Payweek</button>
+                                    <button class="period-btn active" data-period="month">Month</button>
+                                    <button class="period-btn" data-period="year">Year</button>
+                                </div>
+                                <div style="margin-left:auto">
+                                    <span id="current-period-text" class="text-muted"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Main Chart -->
+                        <div class="card">
+                            <div class="chart-title">📊 Spending by Account</div>
+                            <div class="chart-container">
+                                <div id="chart"></div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Stats -->
+                        <div class="card">
+                            <div class="chart-title">📊 Quick Stats</div>
+                            <div id="quick-stats-container">
+                                <div class="stat-row">
+                                    <span class="stat-label">This Week:</span>
+                                    <span id="stat-week" class="stat-value">$0.00</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">This Month:</span>
+                                    <span id="stat-month" class="stat-value">$0.00</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">This Year:</span>
+                                    <span id="stat-year" class="stat-value">$0.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Transactions -->
+                        <div class="card">
+                            <div class="chart-title">Recent Transactions</div>
+                            <div class="table-container">
+                                <table id="recent-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Account</th>
+                                            <th>Category</th>
+                                            <th>Category Group</th>
+                                            <th>Amount</th>
+                                            <th>Merchant</th>
+                                            <th>Payweek</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sidebar">
+                        <!-- Category Summary -->
+                        <div class="card">
+                            <div class="chart-title">Category Summary</div>
+                            <div id="category-summary-cards" class="category-cards"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Merchants View -->
+            <div id="merchants-view" class="app-view" style="display: none;">
+                <div class="card">
+                    <div class="chart-title">🏪 Merchant Management</div>
+                    <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">Organize your merchants in 3 simple steps: consolidate similar merchants → group them into categories → organize categories by type</p>
+                    
+                    <!-- Merchant Actions -->
+                    <div style="margin-bottom: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <button onclick="window.budgetApp?.cleanAllMerchants()" class="btn btn-primary" style="font-size: 0.875rem;">
+                            🤖 Clean All Merchants (AI)
+                        </button>
+                        <button onclick="window.budgetApp?.clearAllMerchantGroups()" class="btn btn-danger" style="font-size: 0.875rem;">
+                            🗑️ Clear All Merchant Groups
+                        </button>
+                    </div>
+                    
+                    <!-- Step Navigation -->
+                    <div class="merchant-steps" style="display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border-light); padding-bottom: 1rem;">
+                        <button onclick="window.budgetApp?.setMerchantStep(1)" class="merchant-step-btn active" data-step="1" style="padding: 0.75rem 1.5rem; border: none; background: var(--primary-color); color: white; border-radius: var(--radius-sm); cursor: pointer; font-weight: 500;">
+                            Step 1: Merchant Groups
+                        </button>
+                        <button onclick="window.budgetApp?.setMerchantStep(2)" class="merchant-step-btn" data-step="2" style="padding: 0.75rem 1.5rem; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-secondary); border-radius: var(--radius-sm); cursor: pointer; font-weight: 500;">
+                            Step 2: Categorize Groups
+                        </button>
+                        <button onclick="window.budgetApp?.setMerchantStep(3)" class="merchant-step-btn" data-step="3" style="padding: 0.75rem 1.5rem; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-secondary); border-radius: var(--radius-sm); cursor: pointer; font-weight: 500;">
+                            Step 3: Category Groups
+                        </button>
+                    </div>
+
+                    <div id="merchant-step-content"></div>
+                </div>
+            </div>
+
+            <!-- Budgets View -->
+            <div id="budgets-view" class="app-view" style="display: none;">
+                <div class="card">
+                    <div class="chart-title">💼 Budget Management</div>
+                    
+                    <!-- Budget Controls -->
+                    <div class="budget-controls" style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <label style="color: var(--text-secondary); font-weight: 500;">Budget Period:</label>
+                            <select id="budget-period-select" class="input-standard" onchange="window.budgetApp?.onBudgetPeriodChange(this.value)">
+                                <option value="payweek">Payweek (Base)</option>
+                                <option value="week">Week</option>
+                                <option value="month">Month</option>
+                                <option value="year">Year</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <label style="color: var(--text-secondary); font-weight: 500;">Filter:</label>
+                            <select id="budget-group-filter" class="input-standard">
+                                <option value="">All Groups</option>
+                                <option value="Living Expenses">Living Expenses</option>
+                                <option value="Lifestyle">Lifestyle</option>
+                                <option value="Financial">Financial</option>
+                                <option value="Personal">Personal</option>
+                            </select>
+                        </div>
+                        <button onclick="window.budgetApp?.saveBudgets()" class="btn btn-success">💾 Save Budgets</button>
+                    </div>
+
+                    <div id="budget-groups-container"></div>
+                </div>
+            </div>
+
+            <!-- Categories View -->
+            <div id="categories-view" class="app-view" style="display: none;">
+                <div class="card">
+                    <div class="chart-title">📁 Budget Categories & Spending</div>
+                    
+                    <!-- Category Group Filter -->
+                    <div class="mb-1">
+                        <label for="category-group-select">Filter by Group:</label>
+                        <select id="category-group-select" class="input-standard" onchange="window.budgetApp?.categoryManager?.onCategoryGroupChange()">
+                            <option value="">All Categories</option>
+                            <option value="Living Expenses">Living Expenses</option>
+                            <option value="Lifestyle">Lifestyle</option>
+                            <option value="Financial">Financial</option>
+                            <option value="Personal">Personal</option>
+                        </select>
+                    </div>
+
+                    <div id="categories-list"></div>
+                </div>
+            </div>
+
+            <!-- Transactions View -->
+            <div id="transactions-view" class="app-view" style="display: none;">
+                <div class="card">
+                    <div class="chart-title">💰 Transaction Management</div>
+                    
+                    <!-- Period Controls & Search -->
+                    <div class="period-section">
+                        <div class="period-controls">
+                            <span class="period-label">Period:</span>
+                            <div class="period-filters">
+                                <button class="period-btn" data-period="week">Week</button>
+                                <button class="period-btn" data-period="payweek">Payweek</button>
+                                <button class="period-btn active" data-period="month">Month</button>
+                                <button class="period-btn" data-period="year">Year</button>
+                            </div>
+                            <div style="margin-left: auto; display: flex; gap: 1rem; align-items: center;">
+                                <input type="text" id="transaction-search" placeholder="Search transactions..." 
+                                       style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); width: 250px;"
+                                       oninput="window.budgetApp?.searchTransactions(this.value)">
+                                <button onclick="window.budgetApp?.clearTransactionSearch()" 
+                                        style="padding: 0.5rem; border: 1px solid var(--border-color); background: var(--card-bg); border-radius: var(--radius-sm); cursor: pointer;"
+                                        title="Clear search">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transactions Table -->
+                    <div class="table-container">
+                        <table id="transactions-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Account</th>
+                                    <th>Category</th>
+                                    <th>Category Group</th>
+                                    <th>Amount</th>
+                                    <th>Merchant</th>
+                                    <th>Payweek</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Modules -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

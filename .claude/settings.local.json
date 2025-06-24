@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rg:*)",
+      "Bash(grep:*)",
+      "Bash(python3:*)",
+      "Bash(mkdir:*)",
+      "Bash(mv:*)",
+      "Bash(rm:*)",
+      "Bash(/usr/local/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/arm64-darwin/rg -n \"setMerchantStep\" \"/Users/danvolchok/Desktop/budget-tracker-web/js/main.js\")",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(/usr/local/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/arm64-darwin/rg -n \"assignMerchantToExistingGroup|createNewGroupWithMerchant|applyCachedMerchantChange\" js/main.js)",
+      "Bash(cat:*)",
+      "Bash(/usr/local/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/arm64-darwin/rg -n \"confirmSuggestedGroup\" /Users/danvolchok/Desktop/budget-tracker-web/js/main.js)",
+      "WebFetch(domain:copilot.money)",
+      "Bash(awk:*)",
+      "Bash(/usr/local/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/arm64-darwin/rg -n \"setupNavigation\" \"/Users/danvolchok/Desktop/budget-tracker-web/js/main.js\")",
+      "Bash(/usr/local/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/arm64-darwin/rg -n \"setupEventListeners\" /Users/danvolchek/Desktop/budget-tracker-web/js/main.js)"
+    ],
+    "deny": []
+  }
+}
