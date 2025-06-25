@@ -38,10 +38,12 @@ export class UI {
     }
   }
 
-  static updateStats(transactions, merchants, cleaned) {
+  static updateStats(transactions, merchants, cleaned, newTx = 0, newMerchants = 0) {
     const transactionCount = document.getElementById('transaction-count');
     const merchantCount = document.getElementById('merchant-count');
     const cleanedCount = document.getElementById('cleaned-count');
+    const newTxCount = document.getElementById('new-transaction-count');
+    const newMerchantCount = document.getElementById('new-merchant-count');
     
     if (transactionCount && transactions !== undefined) {
       transactionCount.textContent = transactions.toLocaleString();
@@ -52,10 +54,12 @@ export class UI {
     if (cleanedCount && cleaned !== undefined) {
       cleanedCount.textContent = cleaned.toLocaleString();
     }
+    if (newTxCount) newTxCount.textContent = newTx.toLocaleString();
+    if (newMerchantCount) newMerchantCount.textContent = newMerchants.toLocaleString();
   }
 
   static resetStats() {
-    this.updateStats(0, 0, 0);
+    this.updateStats(0, 0, 0, 0, 0);
   }
 
   static setLoadingMessage(message) {

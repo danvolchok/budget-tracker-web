@@ -442,7 +442,13 @@ class BudgetTrackerApp {
       
       // Auto-clean new merchants and track how many were cleaned
       const cleanedCount = await this.autoCleanNewMerchants();
-      UI.updateStats(transactionCount, uniqueMerchants, cleanedCount || 0);
+
+      // Determine net-new counts
+      const { newTx, newMerchants, latestTimestamp } = this.computeNetNewCounts();
+
+      UI.updateStats(transactionCount, uniqueMerchants, cleanedCount || 0, newTx, newMerchants);
+      Storage.saveNewCounts(newTx, newMerchants);
+      Storage.saveLastTimestamp(latestTimestamp);
       
       UI.setStep(5, 'Updating dashboard...');
       UI.setProgress(90);
@@ -502,7 +508,12 @@ class BudgetTrackerApp {
       
       // Auto-clean new merchants and track how many were cleaned
       const cleanedCount = await this.autoCleanNewMerchants();
-      UI.updateStats(transactionCount, uniqueMerchants, cleanedCount || 0);
+
+      const { newTx, newMerchants, latestTimestamp } = this.computeNetNewCounts();
+
+      UI.updateStats(transactionCount, uniqueMerchants, cleanedCount || 0, newTx, newMerchants);
+      Storage.saveNewCounts(newTx, newMerchants);
+      Storage.saveLastTimestamp(latestTimestamp);
       
       UI.setStep(5, 'Updating dashboard...');
       UI.setProgress(90);
@@ -3136,6 +3147,31 @@ class BudgetTrackerApp {
     }
     
     return uniqueMerchants.size;
+  }
+
+  // Calculate net-new transactions and merchants since last load
+  computeNetNewCounts() {
+    const lastTs = Storage.getLastTimestamp();
+    let maxTs = lastTs;
+    let newTx = 0;
+    const newMerchantSet = new Set();
+    const merchantIdx = this.columnIndices.merchant !== -1 ? this.columnIndices.merchant : 2;
+
+    for (let i = 1; i < this.rowsData.length; i++) {
+      const row = this.rowsData[i];
+      const dateStr = row[4];
+      const ts = new Date(dateStr).getTime();
+      if (!isNaN(ts) && ts > lastTs) {
+        newTx++;
+        const merchant = row[merchantIdx];
+        if (merchant && merchant.trim()) newMerchantSet.add(merchant.trim());
+      }
+      if (!isNaN(ts) && ts > maxTs) {
+        maxTs = ts;
+      }
+    }
+
+    return { newTx, newMerchants: newMerchantSet.size, latestTimestamp: maxTs };
   }
 
   // Auto-clean only new merchants (those without merchant groups)

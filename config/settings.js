@@ -39,7 +39,10 @@ export const CONFIG = {
     SHEET_ID: 'budgetTracker_sheetId',
     MERCHANT_GROUPS: 'budgetTracker_merchantGroups',
     CATEGORIES: 'budgetTracker_categories',
-    CATEGORY_GROUPS: 'budgetTracker_categoryGroups'
+    CATEGORY_GROUPS: 'budgetTracker_categoryGroups',
+    LAST_TIMESTAMP: 'budgetTracker_lastTimestamp',
+    NEW_TX_COUNT: 'budgetTracker_newTxCount',
+    NEW_MERCHANT_COUNT: 'budgetTracker_newMerchantCount'
   },
 
   // Merchant Patterns for Auto-Categorization

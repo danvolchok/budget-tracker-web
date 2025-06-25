@@ -82,4 +82,17 @@ export class Storage {
   static saveCategories(categories) {
     this.set(CONFIG.STORAGE_KEYS.CATEGORIES, categories);
   }
+
+  static getLastTimestamp() {
+    return parseInt(this.get(CONFIG.STORAGE_KEYS.LAST_TIMESTAMP, '0')) || 0;
+  }
+
+  static saveLastTimestamp(ts) {
+    this.set(CONFIG.STORAGE_KEYS.LAST_TIMESTAMP, String(ts));
+  }
+
+  static saveNewCounts(txCount, merchantCount) {
+    this.set(CONFIG.STORAGE_KEYS.NEW_TX_COUNT, txCount);
+    this.set(CONFIG.STORAGE_KEYS.NEW_MERCHANT_COUNT, merchantCount);
+  }
 }
