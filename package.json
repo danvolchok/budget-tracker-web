@@ -31,7 +31,7 @@
     "apps-script",
     "vanilla-js"
   ],
-  "author": "Budget Tracker Pro",
+  "author": "BudgetTracker Pro",
   "license": "MIT",
   "engines": {
     "python": ">=3.6"
