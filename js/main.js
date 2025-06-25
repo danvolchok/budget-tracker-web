@@ -3148,35 +3148,63 @@ class BudgetTrackerApp {
         return; // Skip if columns not found
       }
       
-      // Find merchants that don't have merchant groups set
+      // Map of merchants that already have a group assigned elsewhere
+      const existingMerchantGroups = new Map();
+      for (let i = 1; i < this.rowsData.length; i++) {
+        const row = this.rowsData[i];
+        const m = row[merchantColIndex];
+        const g = row[merchantGroupColIndex];
+        if (m && m.trim() && g && g.trim()) {
+          existingMerchantGroups.set(m.trim(), g.trim());
+        }
+      }
+
+      // Track merchants needing GPT-4 cleaning and updates for duplicates
       const unclearedMerchants = new Set();
-      
+      const existingGroupUpdates = [];
+
       for (let i = 1; i < this.rowsData.length; i++) { // Skip header
         const row = this.rowsData[i];
         const merchant = row[merchantColIndex];
         const merchantGroup = row[merchantGroupColIndex];
-        
-        // If merchant exists but no merchant group, it needs cleaning
+
         if (merchant && merchant.trim() && (!merchantGroup || merchantGroup.trim() === '')) {
-          unclearedMerchants.add(merchant.trim());
+          const trimmed = merchant.trim();
+          if (existingMerchantGroups.has(trimmed)) {
+            const existingGroup = existingMerchantGroups.get(trimmed);
+            row[merchantGroupColIndex] = existingGroup;
+            const columnLetter = String.fromCharCode(65 + merchantGroupColIndex);
+            const cellRange = `${columnLetter}${i + 1}`;
+            existingGroupUpdates.push({ range: cellRange, value: existingGroup });
+          } else {
+            unclearedMerchants.add(trimmed);
+          }
         }
       }
       
-      if (unclearedMerchants.size === 0) {
-        return; // No new merchants to clean
+      const credentials = Storage.getCredentials();
+      const sheetId = credentials.sheetId;
+
+      if (sheetId && existingGroupUpdates.length > 0) {
+        try {
+          await this.sheetsAPI.batchUpdateCells(sheetId, existingGroupUpdates);
+        } catch (e) {
+          console.error('Failed to apply existing merchant group updates:', e);
+        }
       }
-      
+
+      if (unclearedMerchants.size === 0) {
+        return 0; // All merchants already grouped
+      }
+
       // Show cleaning progress on loading screen
       UI.setLoadingMessage(`🤖 Auto-cleaning ${unclearedMerchants.size} merchant names with GPT-4...`);
-      
+
       // Clean only the new merchant names
       const merchantNames = Array.from(unclearedMerchants);
       const cleaningResults = await this.merchantCleaner.cleanMerchantNames(merchantNames);
-      
+
       // Update Merchant Group column for new merchants only
-      const credentials = Storage.getCredentials();
-      const sheetId = credentials.sheetId;
-      
       if (!sheetId) return;
       
       const updates = [];
