@@ -748,45 +748,6 @@ class BudgetTrackerApp {
     }).join('');
   }
 
-  // Get filtered transactions based on current period
-  getFilteredRows() {
-    if (this.rowsData.length === 0) return [];
-    
-    const transactions = this.processTransactions();
-    const now = new Date();
-    
-    return transactions.filter(transaction => {
-      const transactionDate = new Date(transaction[4]); // Date is at index 4
-      
-      switch (this.currentPeriod) {
-        case 'week':
-          const weekStart = new Date(now);
-          weekStart.setDate(now.getDate() - now.getDay()); // Start of current week
-          weekStart.setHours(0, 0, 0, 0);
-          return transactionDate >= weekStart;
-          
-        case 'payweek':
-          // Assuming payweek is bi-weekly, starting from a reference date
-          const payweekStart = new Date(now);
-          const daysSinceRef = Math.floor((now - new Date(now.getFullYear(), 0, 1)) / (1000 * 60 * 60 * 24));
-          const payweekNumber = Math.floor(daysSinceRef / 14);
-          payweekStart.setTime(new Date(now.getFullYear(), 0, 1).getTime() + (payweekNumber * 14 * 24 * 60 * 60 * 1000));
-          return transactionDate >= payweekStart;
-          
-        case 'month':
-          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-          return transactionDate >= monthStart;
-          
-        case 'year':
-          const yearStart = new Date(now.getFullYear(), 0, 1);
-          return transactionDate >= yearStart;
-          
-        default:
-          return true;
-      }
-    });
-  }
-
   // Setup period controls for both dashboard and transactions views
   setupPeriodControls() {
     document.querySelectorAll('.period-btn').forEach(btn => {
