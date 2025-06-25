@@ -4,11 +4,11 @@ export class Formatters {
   static currency(amount, options = {}) {
     const defaults = {
       style: 'currency',
-      currency: 'USD',
+      currency: 'CAD',
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     };
-    
+
     return new Intl.NumberFormat('en-US', { ...defaults, ...options }).format(amount);
   }
 
