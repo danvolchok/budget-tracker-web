@@ -8,7 +8,7 @@ export class CategoryManager {
   constructor(sheetsAPI) {
     this.sheetsAPI = sheetsAPI;
     this.categories = Storage.getCategories();
-    this.categoryGroups = CONFIG.CATEGORY_GROUPS;
+    this.categoryGroups = Storage.getCategoryGroups();
     this.merchantGroups = Storage.getMerchantGroups();
   }
 

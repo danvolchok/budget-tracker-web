@@ -38,7 +38,8 @@ export const CONFIG = {
     API_KEY: 'budgetTracker_apiKey',
     SHEET_ID: 'budgetTracker_sheetId',
     MERCHANT_GROUPS: 'budgetTracker_merchantGroups',
-    CATEGORIES: 'budgetTracker_categories'
+    CATEGORIES: 'budgetTracker_categories',
+    CATEGORY_GROUPS: 'budgetTracker_categoryGroups'
   },
 
   // Merchant Patterns for Auto-Categorization

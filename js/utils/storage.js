@@ -67,6 +67,14 @@ export class Storage {
     this.set(CONFIG.STORAGE_KEYS.MERCHANT_GROUPS, groups);
   }
 
+  static getCategoryGroups() {
+    return this.get(CONFIG.STORAGE_KEYS.CATEGORY_GROUPS, CONFIG.CATEGORY_GROUPS);
+  }
+
+  static saveCategoryGroups(groups) {
+    this.set(CONFIG.STORAGE_KEYS.CATEGORY_GROUPS, groups);
+  }
+
   static getCategories() {
     return this.get(CONFIG.STORAGE_KEYS.CATEGORIES, CONFIG.CATEGORIES);
   }
