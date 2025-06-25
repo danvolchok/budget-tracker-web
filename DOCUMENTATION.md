@@ -15,7 +15,7 @@ A personal finance management application that connects to Google Sheets to anal
 ### Core Application Files
 - `index.html` - Main HTML structure and UI
 - `js/main.js` - Main application logic (3,200+ lines)
-- `styles/main.css` - CSS styling (201 lines)
+- `styles/main.css` - CSS styling (222 lines)
 - `config/settings.js` - Configuration constants
 
 ### Utility Modules
